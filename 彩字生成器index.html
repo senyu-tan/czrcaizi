@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>彩字代码生成器</title>
+    <style>
+        :root {
+            /* 浅色主题变量 (默认) */
+            --bg: #f4f6fc;
+            --card-bg: #ffffff;
+            --primary: #4f6ef7;
+            --primary-hover: #3b58e6;
+            --text: #2e2e2e;
+            --border: #dce1ed;
+            --input-bg: #fafbfe;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+            --hex-bg: #f0f2f6;
+            --mode-switch-bg: #eceff8;
+            --mode-btn-active-bg: #ffffff;
+            --char-item-bg: #f9fafd;
+        }
+
+        /* 深色主题变量 */
+        .dark-theme {
+            --bg: #1a1a2e;
+            --card-bg: #16213e;
+            --primary: #6c7ff7;
+            --primary-hover: #5a6de6;
+            --text: #e0e0e0;
+            --border: #2a3a5e;
+            --input-bg: #1f2b44;
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            --hex-bg: #253251;
+            --mode-switch-bg: #253251;
+            --mode-btn-active-bg: #3b4b6b;
+            --char-item-bg: #1f2b44;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 20px 12px 40px;
+            margin: 0;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 750px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 14px;
+            box-shadow: var(--shadow);
+            padding: 22px 20px;
+            border: 1px solid var(--border);
+            transition: background 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+
+        h2, h3 {
+            color: var(--text);
+        }
+
+        label {
+            color: var(--text);
+            opacity: 0.85;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            background: var(--input-bg);
+            color: var(--text);
+            transition: border 0.15s, background 0.3s, color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.2);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 70px;
+            font-family: monospace;
+        }
+
+        .checkbox-group {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover { background: var(--primary-hover); }
+        .btn:active { transform: scale(0.97); }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+
+        .btn-outline:hover { background: rgba(79, 110, 247, 0.08); }
+
+        .color-input-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .color-picker {
+            width: 44px;
+            height: 44px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            padding: 2px;
+            background: white;
+        }
+
+        .hex-display {
+            font-family: monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            background: var(--hex-bg);
+            padding: 6px 12px;
+            border-radius: 8px;
+            min-width: 85px;
+            text-align: center;
+            border: 1px solid var(--border);
+            outline: none;
+            transition: border 0.15s, background 0.3s;
+            color: var(--text);
+        }
+
+        .hex-display:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.15);
+        }
+
+        .preset-colors {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        .color-swatch {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.15s, border-color 0.15s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.15);
+            border-color: #333;
+        }
+
+        .char-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 12px;
+        }
+
+        .char-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            background: var(--char-item-bg);
+            padding: 12px 8px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            min-width: 80px;
+            flex: 1 0 auto;
+            transition: background 0.3s, border-color 0.3s;
+        }
+
+        .char-preview {
+            font-size: 1.6rem;
+            font-weight: bold;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        .preview-box {
+            background: #f8f9fe;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 60px;
+            word-break: break-word;
+            font-size: 1.2rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            border: 1px dashed #ccd;
+            transition: background 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        .preview-box.dark {
+            background: #1e1e2e;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .mode-switch {
+            display: flex;
+            gap: 4px;
+            background: var(--mode-switch-bg);
+            border-radius: 20px;
+            padding: 3px;
+        }
+
+        .mode-btn {
+            border: none;
+            background: transparent;
+            padding: 6px 14px;
+            border-radius: 18px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            color: var(--text);
+            opacity: 0.7;
+        }
+
+        .mode-btn.active {
+            background: var(--mode-btn-active-bg);
+            color: var(--text);
+            opacity: 1;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            font-weight: 600;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 8px;
+        }
+
+        .note { font-size: 0.8rem; opacity: 0.7; }
+
+        @media (max-width: 500px) {
+            .card { padding: 16px 14px; }
+            .row { flex-direction: column; align-items: stretch; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 全局UI主题切换 -->
+    <div class="top-bar">
+        <div class="mode-switch" id="uiThemeSwitch">
+            <button class="mode-btn active" data-theme="light">☀️ 浅色</button>
+            <button class="mode-btn" data-theme="dark">🌙 深色</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🎨 彩字代码生成器</h2>
+        <h2>邮箱:3868246991@qq.com</h2>
+        <p class="note">适用于超自然的自定义彩色文字代码，支持单/双行、渐变、自定义样式。生成代码仅供学习河研究目的。</p>
+    </div>
+
+    <!-- 基本设置 -->
+    <div class="card">
+        <h3>⚙️ 基本设置</h3>
+        <div class="row">
+            <div class="col">
+                <label>📏 模式</label>
+                <div class="checkbox-group">
+                    <label><input type="radio" name="lineMode" value="single" checked> 单行</label>
+                    <label><input type="radio" name="lineMode" value="double"> 双行</label>
+                </div>
+            </div>
+            <div class="col">
+                <label>🔢 字号 (1-24)</label>
+                <input type="number" id="fontSize" min="1" max="24" value="16" step="1">
+            </div>
+        </div>
+        <div class="row">
+            <div class="col">
+                <label>第一行文本</label>
+                <input type="text" id="line1Text" placeholder="输入第一行文字" value="你好世界">
+            </div>
+            <div class="col" id="line2Col" style="display: none;">
+                <label>第二行文本</label>
+                <input type="text" id="line2Text" placeholder="输入第二行文字" value="Hello">
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <label>🎛️ 配色模式</label>
+                <div class="checkbox-group">
+                    <label><input type="radio" name="colorMode" value="gradient" checked> 渐变</label>
+                    <label><input type="radio" name="colorMode" value="custom"> 自定义(逐字)</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 渐变设置面板 -->
+    <div class="card" id="gradientPanel">
+        <h3>🌈 渐变颜色设置</h3>
+        <div class="row">
+            <div class="col">
+                <label>起始颜色</label>
+                <div class="color-input-wrapper">
+                    <input type="color" id="startColor" value="#F8D8D1" class="color-picker">
+                    <input type="text" class="hex-display" id="startHex" data-target="startColor" value="#F8D8D1" maxlength="7">
+                </div>
+                <div class="preset-colors" id="startPresets"></div>
+            </div>
+            <div class="col">
+                <label>结束颜色</label>
+                <div class="color-input-wrapper">
+                    <input type="color" id="endColor" value="#9DCDEE" class="color-picker">
+                    <input type="text" class="hex-display" id="endHex" data-target="endColor" value="#9DCDEE" maxlength="7">
+                </div>
+                <div class="preset-colors" id="endPresets"></div>
+            </div>
+        </div>
+        <div class="row">
+            <label>全局样式（应用于整行）</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" id="gradItalic"> 斜体</label>
+                <label><input type="checkbox" id="gradBold"> 粗体</label>
+                <label><input type="checkbox" id="gradUnderline"> 下划线</label>
+            </div>
+        </div>
+        <div id="secondGradientRow" style="display: none;">
+            <div class="divider" style="border-top:1px solid var(--border); margin:14px 0;"></div>
+            <label><input type="checkbox" id="diffGradient"> 第二行使用不同的渐变色</label>
+            <div class="row" id="secondGradientColors" style="display: none;">
+                <div class="col">
+                    <label>第二行起始</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="startColor2" value="#F8D8D1" class="color-picker">
+                        <input type="text" class="hex-display" id="startHex2" data-target="startColor2" value="#F8D8D1" maxlength="7">
+                    </div>
+                </div>
+                <div class="col">
+                    <label>第二行结束</label>
+                    <div class="color-input-wrapper">
+                        <input type="color" id="endColor2" value="#9DCDEE" class="color-picker">
+                        <input type="text" class="hex-display" id="endHex2" data-target="endColor2" value="#9DCDEE" maxlength="7">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 自定义设置面板 -->
+    <div class="card" id="customPanel" style="display: none;">
+        <h3>✏️ 逐字自定义样式</h3>
+        <p class="note">修改文本会重置所有字符样式。请先输入完整文字，再分别调整每个字符的颜色和样式。</p>
+        <div id="charConfigContainer"></div>
+    </div>
+
+    <!-- 生成输出 -->
+    <div class="card">
+        <h3>📋 生成的彩字代码</h3>
+        <div class="output-area">
+            <textarea id="outputCode" readonly rows="4" placeholder="自动生成..."></textarea>
+            <div style="display: flex; justify-content: space-between; margin-top: 8px;">
+                <button class="btn" id="copyBtn">📋 复制代码</button>
+                <button class="btn btn-outline" id="downloadBtn">💾 保存为文件</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览效果 -->
+    <div class="card">
+        <div class="preview-header">
+            <h3 style="margin:0;">👁️ 实时预览 <span class="note">(忽略字号，仅展示颜色与样式)</span></h3>
+            <div class="mode-switch" id="bgModeSwitch">
+                <button class="mode-btn active" data-mode="light">☀️ 浅色</button>
+                <button class="mode-btn" data-mode="dark">🌙 深色</button>
+            </div>
+        </div>
+        <div class="preview-box" id="previewContainer"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ---------- DOM 元素 ----------
+        const lineModeRadios = document.getElementsByName('lineMode');
+        const fontSizeInput = document.getElementById('fontSize');
+        const line1TextInput = document.getElementById('line1Text');
+        const line2TextInput = document.getElementById('line2Text');
+        const line2Col = document.getElementById('line2Col');
+        const secondGradientRow = document.getElementById('secondGradientRow');
+        const diffGradientCheck = document.getElementById('diffGradient');
+        const secondGradientColors = document.getElementById('secondGradientColors');
+        const colorModeRadios = document.getElementsByName('colorMode');
+        const gradientPanel = document.getElementById('gradientPanel');
+        const customPanel = document.getElementById('customPanel');
+
+        const startColorInput = document.getElementById('startColor');
+        const endColorInput = document.getElementById('endColor');
+        const startHexInput = document.getElementById('startHex');
+        const endHexInput = document.getElementById('endHex');
+        const startColor2Input = document.getElementById('startColor2');
+        const endColor2Input = document.getElementById('endColor2');
+        const startHex2Input = document.getElementById('startHex2');
+        const endHex2Input = document.getElementById('endHex2');
+        const gradItalic = document.getElementById('gradItalic');
+        const gradBold = document.getElementById('gradBold');
+        const gradUnderline = document.getElementById('gradUnderline');
+
+        const outputCode = document.getElementById('outputCode');
+        const previewContainer = document.getElementById('previewContainer');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const charConfigContainer = document.getElementById('charConfigContainer');
+
+        const bgModeBtns = document.querySelectorAll('#bgModeSwitch .mode-btn');
+        const uiThemeBtns = document.querySelectorAll('#uiThemeSwitch .mode-btn');
+
+        // ---------- 预设调色板：红→橙→黄→绿→青→蓝→紫 + 白灰黑 ----------
+        const presetColors = [
+            '#FF0000', '#FF3300', '#FF6600', '#FF9900', '#FFCC00', '#FFFF00',
+            '#CCFF00', '#99FF00', '#66FF00', '#33FF00', '#00FF00', '#00FF33',
+            '#00FF66', '#00FF99', '#00FFCC', '#00FFFF', '#00CCFF', '#0099FF',
+            '#0066FF', '#0033FF', '#0000FF', '#3300FF', '#6600FF', '#9900FF',
+            '#CC00FF', '#FF00FF', '#FF00CC', '#FF0099', '#FF0066', '#FF0033',
+            '#FFFFFF', '#AAAAAA', '#555555', '#000000'
+        ];
+
+        function createPresetSwatches(containerId, targetColorInput, targetHexInput) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            presetColors.forEach(hex => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = hex;
+                swatch.title = hex;
+                swatch.addEventListener('click', () => {
+                    targetColorInput.value = hex;
+                    targetHexInput.value = hex.toUpperCase();
+                    updateAll();
+                });
+                container.appendChild(swatch);
+            });
+        }
+
+        createPresetSwatches('startPresets', startColorInput, startHexInput);
+        createPresetSwatches('endPresets', endColorInput, endHexInput);
+
+        function fillSecondPresets() {
+            if (document.getElementById('startPresets2')) return;
+            const startPresetsDiv = document.createElement('div');
+            startPresetsDiv.className = 'preset-colors';
+            startPresetsDiv.id = 'startPresets2';
+            startColor2Input.parentElement.parentElement.appendChild(startPresetsDiv);
+            createPresetSwatches('startPresets2', startColor2Input, startHex2Input);
+
+            const endPresetsDiv = document.createElement('div');
+            endPresetsDiv.className = 'preset-colors';
+            endPresetsDiv.id = 'endPresets2';
+            endColor2Input.parentElement.parentElement.appendChild(endPresetsDiv);
+            createPresetSwatches('endPresets2', endColor2Input, endHex2Input);
+        }
+
+        diffGradientCheck.addEventListener('change', () => {
+            secondGradientColors.style.display = diffGradientCheck.checked ? 'flex' : 'none';
+            if (diffGradientCheck.checked) fillSecondPresets();
+            updateAll();
+        });
+
+        // ---------- 颜色选择器与hex输入同步 ----------
+        function bindColorInput(colorInput, hexInput) {
+            colorInput.addEventListener('input', () => {
+                hexInput.value = colorInput.value.toUpperCase();
+                updateAll();
+            });
+            hexInput.addEventListener('input', () => {
+                let val = hexInput.value.trim();
+                if (val === '') return;
+                if (val[0] !== '#') val = '#' + val;
+                val = val.toUpperCase().substring(0, 7);
+                hexInput.value = val;
+                if (/^#[0-9A-F]{6}$/.test(val)) {
+                    colorInput.value = val;
+                    updateAll();
+                }
+            });
+            hexInput.value = colorInput.value.toUpperCase();
+        }
+
+        bindColorInput(startColorInput, startHexInput);
+        bindColorInput(endColorInput, endHexInput);
+        bindColorInput(startColor2Input, startHex2Input);
+        bindColorInput(endColor2Input, endHex2Input);
+
+        // ---------- 背景模式切换（预览区）----------
+        let currentBgMode = 'light';
+        bgModeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                bgModeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentBgMode = btn.dataset.mode;
+                previewContainer.classList.toggle('dark', currentBgMode === 'dark');
+            });
+        });
+
+        // ---------- 全局UI主题切换 ----------
+        uiThemeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                uiThemeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const theme = btn.dataset.theme;
+                document.documentElement.classList.toggle('dark-theme', theme === 'dark');
+            });
+        });
+
+        // ---------- 模式切换 ----------
+        function getLineMode() {
+            for (let radio of lineModeRadios) if (radio.checked) return radio.value;
+            return 'single';
+        }
+
+        function updateLineModeUI() {
+            const mode = getLineMode();
+            line2Col.style.display = mode === 'double' ? 'block' : 'none';
+            secondGradientRow.style.display = mode === 'double' ? 'block' : 'none';
+            if (mode === 'single') {
+                diffGradientCheck.checked = false;
+                secondGradientColors.style.display = 'none';
+            }
+            updateAll();
+        }
+        lineModeRadios.forEach(r => r.addEventListener('change', updateLineModeUI));
+
+        function getColorMode() {
+            for (let radio of colorModeRadios) if (radio.checked) return radio.value;
+            return 'gradient';
+        }
+
+        function updateColorModeUI() {
+            const mode = getColorMode();
+            gradientPanel.style.display = mode === 'gradient' ? 'block' : 'none';
+            customPanel.style.display = mode === 'custom' ? 'block' : 'none';
+            if (mode === 'custom') buildCustomCharConfig();
+            updateAll();
+        }
+        colorModeRadios.forEach(r => r.addEventListener('change', updateColorModeUI));
+
+        // ---------- 自定义模式：动态生成字符配置 ----------
+        function buildCustomCharConfig() {
+            const line1 = line1TextInput.value;
+            const mode = getLineMode();
+            const line2 = mode === 'double' ? line2TextInput.value : '';
+            let html = '<div><strong>第一行字符设置：</strong></div><div class="char-grid" id="customLine1Chars">';
+            for (let i = 0; i < line1.length; i++) html += createCharItemHTML(line1[i], 'line1', i);
+            html += '</div>';
+            if (mode === 'double') {
+                html += '<div class="divider" style="border-top:1px solid var(--border); margin:14px 0;"></div><div><strong>第二行字符设置：</strong></div><div class="char-grid" id="customLine2Chars">';
+                for (let i = 0; i < line2.length; i++) html += createCharItemHTML(line2[i], 'line2', i);
+                html += '</div>';
+            }
+            charConfigContainer.innerHTML = html;
+
+            document.querySelectorAll('.custom-color-input').forEach(input => {
+                const hexInput = input.parentElement.querySelector('.custom-hex');
+                input.addEventListener('input', () => {
+                    hexInput.value = input.value.toUpperCase();
+                    updateAll();
+                });
+                hexInput.addEventListener('input', () => {
+                    let val = hexInput.value.trim();
+                    if (val === '') return;
+                    if (val[0] !== '#') val = '#' + val;
+                    val = val.toUpperCase().substring(0, 7);
+                    hexInput.value = val;
+                    if (/^#[0-9A-F]{6}$/.test(val)) {
+                        input.value = val;
+                        updateAll();
+                    }
+                });
+                hexInput.value = input.value.toUpperCase();
+            });
+            document.querySelectorAll('.custom-style-check').forEach(checkbox => {
+                checkbox.addEventListener('change', updateAll);
+            });
+        }
+
+        function createCharItemHTML(char, line, index) {
+            const escapedChar = char.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            return `
+                <div class="char-item" data-line="${line}" data-index="${index}">
+                    <div class="char-preview">${escapedChar}</div>
+                    <div class="color-input-wrapper" style="justify-content:center;">
+                        <input type="color" class="color-picker custom-color-input" value="#FFFFFF" data-line="${line}" data-index="${index}">
+                        <input type="text" class="hex-display custom-hex" style="font-size:0.8rem;" value="#FFFFFF" maxlength="7">
+                    </div>
+                    <div class="checkbox-group" style="justify-content:center; font-size:0.8rem;">
+                        <label><input type="checkbox" class="custom-style-check" data-style="italic" data-line="${line}" data-index="${index}"> 斜</label>
+                        <label><input type="checkbox" class="custom-style-check" data-style="bold" data-line="${line}" data-index="${index}"> 粗</label>
+                        <label><input type="checkbox" class="custom-style-check" data-style="underline" data-line="${line}" data-index="${index}"> 下</label>
+                    </div>
+                </div>
+            `;
+        }
+
+        line1TextInput.addEventListener('input', () => {
+            if (getColorMode() === 'custom') buildCustomCharConfig();
+            else updateAll();
+        });
+        line2TextInput.addEventListener('input', () => {
+            if (getColorMode() === 'custom') buildCustomCharConfig();
+            else updateAll();
+        });
+
+        fontSizeInput.addEventListener('input', updateAll);
+        gradItalic.addEventListener('change', updateAll);
+        gradBold.addEventListener('change', updateAll);
+        gradUnderline.addEventListener('change', updateAll);
+
+        // ---------- 工具函数 ----------
+        function hexToRgb(hex) {
+            hex = hex.replace('#','');
+            return [parseInt(hex.substring(0,2),16), parseInt(hex.substring(2,4),16), parseInt(hex.substring(4,6),16)];
+        }
+
+        function rgbToHex(r,g,b) {
+            return '#' + [r,g,b].map(x => Math.max(0,Math.min(255,x)).toString(16).padStart(2,'0')).join('').toUpperCase();
+        }
+
+        function generateGradientColors(startHex, endHex, steps) {
+            if (steps <= 0) return [];
+            if (steps === 1) return [startHex];
+            const startRgb = hexToRgb(startHex), endRgb = hexToRgb(endHex);
+            return Array.from({length: steps}, (_, i) => {
+                const r = Math.round(startRgb[0] + (endRgb[0]-startRgb[0]) * i / (steps-1));
+                const g = Math.round(startRgb[1] + (endRgb[1]-startRgb[1]) * i / (steps-1));
+                const b = Math.round(startRgb[2] + (endRgb[2]-startRgb[2]) * i / (steps-1));
+                return rgbToHex(r,g,b);
+            });
+        }
+
+        function escapeHtml(text) {
+            return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function wrapStyleTags(text, italic, bold, underline) {
+            if (underline) text = `<u>${text}</u>`;
+            if (bold) text = `<b>${text}</b>`;
+            if (italic) text = `<i>${text}</i>`;
+            return text;
+        }
+
+        function charCodeFragment(char, colorHex, italic, bold, underline) {
+            return wrapStyleTags(`<color=${colorHex}>${char}</color>`, italic, bold, underline);
+        }
+
+        function generateGradientLine(text, startHex, endHex, italic, bold, underline) {
+            const colors = generateGradientColors(startHex, endHex, text.length);
+            return text.split('').map((ch,i) => charCodeFragment(ch, colors[i], italic, bold, underline)).join('');
+        }
+
+        function getCustomLineSettings(lineClass) {
+            const items = document.querySelectorAll(`.char-item[data-line="${lineClass}"]`);
+            return Array.from(items).map(item => {
+                const colorInput = item.querySelector('.custom-color-input');
+                return {
+                    color: colorInput ? colorInput.value : '#FFFFFF',
+                    italic: item.querySelector('.custom-style-check[data-style="italic"]')?.checked || false,
+                    bold: item.querySelector('.custom-style-check[data-style="bold"]')?.checked || false,
+                    underline: item.querySelector('.custom-style-check[data-style="underline"]')?.checked || false
+                };
+            });
+        }
+
+        function generate() {
+            const mode = getLineMode();
+            const fontSize = parseInt(fontSizeInput.value, 10) || 16;
+            const colorMode = getColorMode();
+            const line1Text = line1TextInput.value;
+            const line2Text = mode === 'double' ? line2TextInput.value : '';
+
+            let line1Code = '', line2Code = '';
+            let previewLine1 = '', previewLine2 = '';
+
+            if (colorMode === 'gradient') {
+                const italic = gradItalic.checked, bold = gradBold.checked, underline = gradUnderline.checked;
+                const s1 = startColorInput.value, e1 = endColorInput.value;
+                line1Code = generateGradientLine(line1Text, s1, e1, italic, bold, underline);
+                previewLine1 = generatePreviewHtml(line1Text, s1, e1, italic, bold, underline);
+
+                if (mode === 'double') {
+                    let s2 = s1, e2 = e1;
+                    if (diffGradientCheck.checked) {
+                        s2 = startColor2Input.value;
+                        e2 = endColor2Input.value;
+                    }
+                    line2Code = generateGradientLine(line2Text, s2, e2, italic, bold, underline);
+                    previewLine2 = generatePreviewHtml(line2Text, s2, e2, italic, bold, underline);
+                }
+            } else {
+                const line1Settings = getCustomLineSettings('line1');
+                line1Code = line1Text.split('').map((ch,i) => {
+                    const s = line1Settings[i] || { color: '#FFFFFF', italic: false, bold: false, underline: false };
+                    return charCodeFragment(ch, s.color, s.italic, s.bold, s.underline);
+                }).join('');
+                previewLine1 = line1Text.split('').map((ch,i) => {
+                    const s = line1Settings[i] || { color: '#FFFFFF', italic: false, bold: false, underline: false };
+                    return wrapPreviewChar(escapeHtml(ch), s.color, s.italic, s.bold, s.underline);
+                }).join('');
+
+                if (mode === 'double') {
+                    const line2Settings = getCustomLineSettings('line2');
+                    line2Code = line2Text.split('').map((ch,i) => {
+                        const s = line2Settings[i] || { color: '#FFFFFF', italic: false, bold: false, underline: false };
+                        return charCodeFragment(ch, s.color, s.italic, s.bold, s.underline);
+                    }).join('');
+                    previewLine2 = line2Text.split('').map((ch,i) => {
+                        const s = line2Settings[i] || { color: '#FFFFFF', italic: false, bold: false, underline: false };
+                        return wrapPreviewChar(escapeHtml(ch), s.color, s.italic, s.bold, s.underline);
+                    }).join('');
+                }
+            }
+
+            const finalCode = mode === 'double'
+                ? `<size=${fontSize}>${line1Code}\n${line2Code}</size>`
+                : `<size=${fontSize}>${line1Code}</size>`;
+            outputCode.value = finalCode;
+
+            let previewHtml = mode === 'double' ? previewLine1 + '<br>' + previewLine2 : previewLine1;
+            previewContainer.innerHTML = previewHtml || '&nbsp;';
+        }
+
+        function generatePreviewHtml(text, startHex, endHex, italic, bold, underline) {
+            const colors = generateGradientColors(startHex, endHex, text.length);
+            return text.split('').map((ch,i) => wrapPreviewChar(escapeHtml(ch), colors[i], italic, bold, underline)).join('');
+        }
+
+        function wrapPreviewChar(escapedChar, colorHex, italic, bold, underline) {
+            let html = `<span style="color:${colorHex};">${escapedChar}</span>`;
+            if (underline) html = `<u>${html}</u>`;
+            if (bold) html = `<b>${html}</b>`;
+            if (italic) html = `<i>${html}</i>`;
+            return html;
+        }
+
+        function updateAll() {
+            if (getColorMode() === 'custom') {
+                const line1Count = document.querySelectorAll('#customLine1Chars .char-item').length;
+                const line2Count = getLineMode()==='double' ? document.querySelectorAll('#customLine2Chars .char-item').length : 0;
+                if (line1Count !== line1TextInput.value.length || 
+                    (getLineMode()==='double' && line2Count !== line2TextInput.value.length)) {
+                    buildCustomCharConfig();
+                }
+            }
+            generate();
+        }
+
+        // ---------- 复制与下载 ----------
+        copyBtn.addEventListener('click', () => {
+            outputCode.select();
+            document.execCommand('copy');
+            navigator.clipboard?.writeText(outputCode.value).catch(() => {});
+            alert('代码已复制到剪贴板');
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([`生成时间: ${new Date().toLocaleString()}\n${outputCode.value}`], {type: 'text/plain'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '彩字代码.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        // 初始化
+        updateLineModeUI();
+        updateColorModeUI();
+        fillSecondPresets();
+        updateAll();
+    })();
+</script>
+</body>
+</html>
